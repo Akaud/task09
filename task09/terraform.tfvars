@@ -5,5 +5,5 @@ virtual_network_address_space = ["10.0.0.0/16"]
 aks_subnet_name             = "aks-snet"
 aks_subnet_address_space    = ["10.0.0.0/24"]
 aks_cluster_name            = "cmtr-pp46akvy-mod9-aks"
-aks_loadbalancer_ip         = "172.212.52.246"
+aks_loadbalancer_ip         = "172.212.38.38"
 firewall_public_ip_name     = "cmtr-pp46akvy-mod9-pip"
