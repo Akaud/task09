@@ -9,8 +9,8 @@ resource "azurerm_public_ip" "firewall_pip" {
   name                = var.firewall_public_ip_name
   location            = var.location
   resource_group_name = var.resource_group_name
-  allocation_method   = "Static"
-  sku                 = "Standard"
+  allocation_method   = local.firewall_pip_allocation_method
+  sku                 = local.firewall_pip_sku
 
   lifecycle {
     create_before_destroy = true
@@ -21,8 +21,8 @@ resource "azurerm_firewall" "afw" {
   name                = local.firewall_name
   location            = var.location
   resource_group_name = var.resource_group_name
-  sku_name            = "AZFW_VNet"
-  sku_tier            = "Standard"
+  sku_name            = local.firewall_sku_name
+  sku_tier            = local.firewall_sku_tier
 
   ip_configuration {
     name                 = "configuration"
@@ -37,9 +37,9 @@ resource "azurerm_route_table" "firewall_route_table" {
   resource_group_name = var.resource_group_name
 
   route {
-    name           = "default-route-to-firewall"
-    address_prefix = "0.0.0.0/0"
-    next_hop_type  = "VirtualAppliance"
+    name                   = local.default_route_name
+    address_prefix         = local.default_route_address_prefix
+    next_hop_type          = local.default_route_next_hop_type
     next_hop_in_ip_address = azurerm_firewall.afw.ip_configuration[0].private_ip_address
   }
 }
@@ -59,8 +59,8 @@ resource "azurerm_firewall_application_rule_collection" "app_rule_collection" {
   name                = local.app_rule_collection_name
   azure_firewall_name = azurerm_firewall.afw.name
   resource_group_name = var.resource_group_name
-  priority            = 100
-  action              = "Allow"
+  priority            = local.app_rule_collection_priority
+  action              = local.app_rule_collection_action
 
   dynamic "rule" {
     for_each = local.application_rules
@@ -83,8 +83,8 @@ resource "azurerm_firewall_network_rule_collection" "net_rule_collection" {
   name                = local.net_rule_collection_name
   azure_firewall_name = azurerm_firewall.afw.name
   resource_group_name = var.resource_group_name
-  priority            = 200
-  action              = "Allow"
+  priority            = local.net_rule_collection_priority
+  action              = local.net_rule_collection_action
 
   dynamic "rule" {
     for_each = local.network_rules
@@ -102,19 +102,19 @@ resource "azurerm_firewall_nat_rule_collection" "nat_rule_collection" {
   name                = local.nat_rule_collection_name
   azure_firewall_name = azurerm_firewall.afw.name
   resource_group_name = var.resource_group_name
-  priority            = 300
-  action              = "Dnat"
+  priority            = local.nat_rule_collection_priority
+  action              = local.nat_rule_collection_action
 
   dynamic "rule" {
     for_each = local.nat_rules
     content {
-      name                = rule.value.name
-      source_addresses    = rule.value.source_addresses
+      name                  = rule.value.name
+      source_addresses      = rule.value.source_addresses
       destination_addresses = rule.value.destination_addresses
-      destination_ports   = rule.value.destination_ports
-      translated_address  = rule.value.translated_address
-      translated_port     = rule.value.translated_port
-      protocols           = rule.value.protocols
+      destination_ports     = rule.value.destination_ports
+      translated_address    = rule.value.translated_address
+      translated_port       = rule.value.translated_port
+      protocols             = rule.value.protocols
     }
   }
 }
@@ -130,13 +130,13 @@ data "azurerm_network_security_group" "aks_nsg" {
 }
 
 resource "azurerm_network_security_rule" "allow_firewall_to_loadbalancer" {
-  name                        = "AllowAccessFromFirewallPublicIPToLoadBalancerIP"
-  priority                    = 400
-  direction                   = "Inbound"
-  access                      = "Allow"
-  protocol                    = "*"
-  source_port_range           = "*"
-  destination_port_range      = "80"
+  name                        = local.nsg_rule_name
+  priority                    = local.nsg_rule_priority
+  direction                   = local.nsg_rule_direction
+  access                      = local.nsg_rule_access
+  protocol                    = local.nsg_rule_protocol
+  source_port_range           = local.nsg_rule_source_port_range
+  destination_port_range      = local.nsg_rule_destination_port_range
   source_address_prefix       = azurerm_public_ip.firewall_pip.ip_address
   destination_address_prefix  = var.aks_loadbalancer_ip
   resource_group_name         = data.azurerm_kubernetes_cluster.aks_cluster.node_resource_group
