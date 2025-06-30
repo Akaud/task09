@@ -79,7 +79,6 @@ resource "azurerm_firewall_application_rule_collection" "app_rule_collection" {
   }
 }
 
-# Network Rule Collection within an Azure Firewall
 resource "azurerm_firewall_network_rule_collection" "net_rule_collection" {
   name                = local.net_rule_collection_name
   azure_firewall_name = azurerm_firewall.afw.name
@@ -99,7 +98,6 @@ resource "azurerm_firewall_network_rule_collection" "net_rule_collection" {
   }
 }
 
-# NAT Rule Collection within an Azure Firewall
 resource "azurerm_firewall_nat_rule_collection" "nat_rule_collection" {
   name                = local.nat_rule_collection_name
   azure_firewall_name = azurerm_firewall.afw.name
