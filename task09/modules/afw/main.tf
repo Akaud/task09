@@ -125,7 +125,7 @@ data "azurerm_kubernetes_cluster" "aks_cluster" {
 }
 
 data "azurerm_network_security_group" "aks_nsg" {
-  name                = locals.aks_nsg_name
+  name                = local.aks_nsg_name
   resource_group_name = data.azurerm_kubernetes_cluster.aks_cluster.node_resource_group
 }
 
