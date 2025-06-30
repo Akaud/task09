@@ -23,4 +23,5 @@ module "afw" {
   aks_loadbalancer_ip        = var.aks_loadbalancer_ip
   firewall_public_ip_name    = var.firewall_public_ip_name
   prefix                     = local.prefix
+  aks_cluster_name           = var.aks_cluster_name
 }

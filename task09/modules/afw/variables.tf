@@ -37,3 +37,8 @@ variable "prefix" {
   description = "The common prefix for resource naming."
   type        = string
 }
+
+variable "aks_cluster_name" {
+  description = "The name of the AKS cluster."
+  type        = string
+}

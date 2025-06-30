@@ -118,3 +118,27 @@ resource "azurerm_firewall_nat_rule_collection" "nat_rule_collection" {
     }
   }
 }
+
+data "azurerm_kubernetes_cluster" "aks_cluster" {
+  name                = var.aks_cluster_name
+  resource_group_name = var.resource_group_name
+}
+
+data "azurerm_network_security_group" "aks_nsg" {
+  name                = "${data.azurerm_kubernetes_cluster.aks_cluster.node_resource_group}-aks-agentpool-nsg"
+  resource_group_name = data.azurerm_kubernetes_cluster.aks_cluster.node_resource_group
+}
+
+resource "azurerm_network_security_rule" "allow_firewall_to_loadbalancer" {
+  name                        = "AllowAccessFromFirewallPublicIPToLoadBalancerIP"
+  priority                    = 400
+  direction                   = "Inbound"
+  access                      = "Allow"
+  protocol                    = "*"
+  source_port_range           = "*"
+  destination_port_range      = "80"
+  source_address_prefix       = azurerm_public_ip.firewall_pip.ip_address
+  destination_address_prefix  = var.aks_loadbalancer_ip
+  resource_group_name         = data.azurerm_kubernetes_cluster.aks_cluster.node_resource_group
+  network_security_group_name = data.azurerm_network_security_group.aks_nsg.name
+}
