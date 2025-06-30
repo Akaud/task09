@@ -62,21 +62,24 @@ resource "azurerm_firewall_application_rule_collection" "app_rule_collection" {
   priority            = 100
   action              = "Allow"
 
-  rule {
-    name             = "AllowNginxHttp"
-    source_addresses = [data.azurerm_subnet.aks_subnet_details.address_prefixes[0]]
-    target_fqdns     = ["nginx.org", "www.nginx.org"]
-    protocol {
-      port = "80"
-      type = "Http"
-    }
-    protocol {
-      port = "443"
-      type = "Https"
+  dynamic "rule" {
+    for_each = local.application_rules
+    content {
+      name             = rule.value.name
+      source_addresses = rule.value.source_addresses
+      target_fqdns     = rule.value.target_fqdns
+      dynamic "protocol" {
+        for_each = rule.value.protocols
+        content {
+          port = protocol.value.port
+          type = protocol.value.type
+        }
+      }
     }
   }
 }
 
+# Network Rule Collection within an Azure Firewall
 resource "azurerm_firewall_network_rule_collection" "net_rule_collection" {
   name                = local.net_rule_collection_name
   azure_firewall_name = azurerm_firewall.afw.name
@@ -84,31 +87,19 @@ resource "azurerm_firewall_network_rule_collection" "net_rule_collection" {
   priority            = 200
   action              = "Allow"
 
-  rule {
-    name                  = "AllowOutboundDNS"
-    source_addresses      = data.azurerm_subnet.aks_subnet_details.address_prefixes
-    destination_addresses = ["*"]
-    destination_ports     = ["53"]
-    protocols             = ["UDP", "TCP"]
-  }
-
-  rule {
-    name                  = "AllowOutboundHttps"
-    source_addresses      = data.azurerm_subnet.aks_subnet_details.address_prefixes
-    destination_addresses = ["*"]
-    destination_ports     = ["443"]
-    protocols             = ["TCP"]
-  }
-
-  rule {
-    name                  = "AllowAzureServices"
-    source_addresses      = data.azurerm_subnet.aks_subnet_details.address_prefixes
-    destination_addresses = ["AzureCloud.${var.location}"]
-    destination_ports     = ["*"]
-    protocols             = ["TCP"]
+  dynamic "rule" {
+    for_each = local.network_rules
+    content {
+      name                  = rule.value.name
+      source_addresses      = rule.value.source_addresses
+      destination_addresses = rule.value.destination_addresses
+      destination_ports     = rule.value.destination_ports
+      protocols             = rule.value.protocols
+    }
   }
 }
 
+# NAT Rule Collection within an Azure Firewall
 resource "azurerm_firewall_nat_rule_collection" "nat_rule_collection" {
   name                = local.nat_rule_collection_name
   azure_firewall_name = azurerm_firewall.afw.name
@@ -116,13 +107,16 @@ resource "azurerm_firewall_nat_rule_collection" "nat_rule_collection" {
   priority            = 300
   action              = "Dnat"
 
-  rule {
-    name                = "NginxLoadBalancerAccess"
-    source_addresses    = ["*"]
-    destination_addresses = [azurerm_public_ip.firewall_pip.ip_address]
-    destination_ports   = ["80"]
-    translated_address  = var.aks_loadbalancer_ip
-    translated_port     = "80"
-    protocols           = ["TCP"]
+  dynamic "rule" {
+    for_each = local.nat_rules
+    content {
+      name                = rule.value.name
+      source_addresses    = rule.value.source_addresses
+      destination_addresses = rule.value.destination_addresses
+      destination_ports   = rule.value.destination_ports
+      translated_address  = rule.value.translated_address
+      translated_port     = rule.value.translated_port
+      protocols           = rule.value.protocols
+    }
   }
 }
