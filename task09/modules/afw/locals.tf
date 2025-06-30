@@ -10,6 +10,8 @@ locals {
   firewall_sku_name = "AZFW_VNet"
   firewall_sku_tier = "Standard"
 
+  aks_nsg_name = "aks-agentpool-22974405-nsg"
+
   default_route_name           = "default-route-to-firewall"
   default_route_address_prefix = "0.0.0.0/0"
   default_route_next_hop_type  = "VirtualAppliance"
