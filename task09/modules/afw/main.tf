@@ -62,7 +62,7 @@ resource "azurerm_firewall_application_rule_collection" "app_rule_collection" {
     for_each = local.application_rules
     content {
       name             = rule.value.name
-      target_fqdns     = rule.value.target_fqdns
+      fqdn_tags        = "AzureKubernetesService"
       source_addresses = [data.azurerm_subnet.aks_subnet.address_prefixes[0]]
       dynamic "protocol" {
         for_each = rule.value.protocols
