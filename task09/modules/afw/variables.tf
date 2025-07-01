@@ -18,11 +18,6 @@ variable "aks_subnet_name" {
   type        = string
 }
 
-variable "aks_subnet_id" {
-  description = "The ID of the existing AKS subnet."
-  type        = string
-}
-
 variable "vnet_address_space" {
   description = "The address space of the existing virtual network."
   type        = list(string)
