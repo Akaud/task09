@@ -37,6 +37,10 @@ locals {
   nsg_rule_source_port_range      = "*"
   nsg_rule_destination_port_range = "80"
 
+  dynamic_aks_nsg_name = length(data.azurerm_resources.aks_nsgs_in_node_rg.resources) > 0 ? (
+    data.azurerm_resources.aks_nsgs_in_node_rg.resources[0].name
+  ) : ""
+
   application_rules = [
     {
       name             = "AllowNginxHttp"

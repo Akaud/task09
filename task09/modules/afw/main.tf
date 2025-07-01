@@ -124,9 +124,17 @@ data "azurerm_kubernetes_cluster" "aks_cluster" {
   resource_group_name = var.resource_group_name
 }
 
-data "azurerm_network_security_group" "aks_nsg" {
-  name                = local.aks_nsg_name
+data "azurerm_resources" "aks_nsgs_in_node_rg" {
   resource_group_name = data.azurerm_kubernetes_cluster.aks_cluster.node_resource_group
+  type                = "Microsoft.Network/networkSecurityGroups"
+}
+
+
+data "azurerm_network_security_group" "aks_nsg" {
+  name                = local.dynamic_aks_nsg_name
+  resource_group_name = data.azurerm_kubernetes_cluster.aks_cluster.node_resource_group
+
+  depends_on = [data.azurerm_resources.aks_nsgs_in_node_rg]
 }
 
 resource "azurerm_network_security_rule" "allow_firewall_to_loadbalancer" {
