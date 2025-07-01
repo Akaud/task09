@@ -129,11 +129,9 @@ data "azurerm_resources" "aks_nsgs_in_node_rg" {
   type                = "Microsoft.Network/networkSecurityGroups"
 }
 
-
 data "azurerm_network_security_group" "aks_nsg" {
-  name                = local.dynamic_aks_nsg_name
+  name                = data.azurerm_resources.aks_nsgs_in_node_rg.resources[0].name
   resource_group_name = data.azurerm_kubernetes_cluster.aks_cluster.node_resource_group
-
   depends_on = [data.azurerm_resources.aks_nsgs_in_node_rg]
 }
 
@@ -145,7 +143,7 @@ resource "azurerm_network_security_rule" "allow_firewall_to_loadbalancer" {
   protocol                    = local.nsg_rule_protocol
   source_port_range           = local.nsg_rule_source_port_range
   destination_port_range      = local.nsg_rule_destination_port_range
-  source_address_prefix       = azurerm_public_ip.firewall_pip.ip_address
+  source_address_prefix       = azurerm_firewall.afw.ip_configuration[0].private_ip_address
   destination_address_prefix  = var.aks_loadbalancer_ip
   resource_group_name         = data.azurerm_kubernetes_cluster.aks_cluster.node_resource_group
   network_security_group_name = data.azurerm_network_security_group.aks_nsg.name

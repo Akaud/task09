@@ -10,8 +10,6 @@ locals {
   firewall_sku_name = "AZFW_VNet"
   firewall_sku_tier = "Standard"
 
-  aks_nsg_name = "aks-agentpool-22974405-nsg"
-
   default_route_name           = "default-route-to-firewall"
   default_route_address_prefix = "0.0.0.0/0"
   default_route_next_hop_type  = "VirtualAppliance"
@@ -36,10 +34,6 @@ locals {
   nsg_rule_protocol               = "*"
   nsg_rule_source_port_range      = "*"
   nsg_rule_destination_port_range = "80"
-
-  dynamic_aks_nsg_name = length(data.azurerm_resources.aks_nsgs_in_node_rg.resources) > 0 ? (
-    data.azurerm_resources.aks_nsgs_in_node_rg.resources[0].name
-  ) : ""
 
   application_rules = [
     {
