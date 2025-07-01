@@ -28,7 +28,7 @@ resource "azurerm_firewall" "afw" {
   resource_group_name = var.resource_group_name
   sku_name            = "AZFW_VNet"
   sku_tier            = "Standard"
-  dns_proxy_enabled   =  true
+  dns_proxy_enabled   = true
   ip_configuration {
     name                 = "configuration"
     subnet_id            = azurerm_subnet.firewall_subnet.id
@@ -65,13 +65,6 @@ resource "azurerm_firewall_application_rule_collection" "app_rule_collection" {
       name             = rule.value.name
       fqdn_tags        = ["AzureKubernetesService"]
       source_addresses = [data.azurerm_subnet.aks_subnet.address_prefixes[0]]
-      dynamic "protocol" {
-        for_each = rule.value.protocols
-        content {
-          port = protocol.value.port
-          type = protocol.value.type
-        }
-      }
     }
   }
 }

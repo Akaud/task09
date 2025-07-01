@@ -7,12 +7,7 @@ locals {
   nat_rule_collection_name = format("%s-natrc", var.prefix)
   application_rules = [
     {
-      name         = "AllowNginxHttp"
-      target_fqdns = ["*"]
-      protocols = [
-        { port = "80", type = "Http" },
-        { port = "443", type = "Https" }
-      ]
+      name = "AllowNginxHttp"
     }
   ]
 
