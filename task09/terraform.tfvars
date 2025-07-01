@@ -1,9 +1,5 @@
-location                    = "East US"
-resource_group_name         = "cmtr-pp46akvy-mod9-rg"
-virtual_network_name        = "cmtr-pp46akvy-mod9-vnet"
+location                      = "East US"
 virtual_network_address_space = ["10.0.0.0/16"]
-aks_subnet_name             = "aks-snet"
-aks_subnet_address_space    = ["10.0.0.0/24"]
-aks_cluster_name            = "cmtr-pp46akvy-mod9-aks"
-aks_loadbalancer_ip         = "52.190.42.176"
-firewall_public_ip_name     = "cmtr-pp46akvy-mod9-pip"
+aks_subnet_address_space      = ["10.0.0.0/24"]
+aks_loadbalancer_ip           = "51.8.220.66"
+prefix                        = "cmtr-pp46akvy-mod9"

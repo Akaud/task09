@@ -1,27 +1,28 @@
 data "azurerm_resource_group" "rg" {
-  name = var.resource_group_name
+  name = local.rg_name
 }
 
 data "azurerm_virtual_network" "vnet" {
-  name                = var.virtual_network_name
+  name                = local.vnet_name
   resource_group_name = data.azurerm_resource_group.rg.name
 }
 
 data "azurerm_subnet" "aks_subnet" {
-  name                 = var.aks_subnet_name
+  name                 = local.subnet_name
   virtual_network_name = data.azurerm_virtual_network.vnet.name
   resource_group_name  = data.azurerm_resource_group.rg.name
 }
 
 module "afw" {
-  source                     = "./modules/afw"
-  resource_group_name        = data.azurerm_resource_group.rg.name
-  location                   = var.location
-  virtual_network_name       = data.azurerm_virtual_network.vnet.name
-  aks_subnet_id              = data.azurerm_subnet.aks_subnet.id
-  aks_subnet_name            = var.aks_subnet_name
-  aks_loadbalancer_ip        = var.aks_loadbalancer_ip
-  firewall_public_ip_name    = var.firewall_public_ip_name
-  prefix                     = local.prefix
-  aks_cluster_name           = var.aks_cluster_name
+  source              = "./modules/afw"
+  prefix              = var.prefix
+  location            = var.location
+  vnet_name           = data.azurerm_virtual_network.vnet.name
+  resource_group_name = data.azurerm_resource_group.rg.name
+  aks_subnet_id       = data.azurerm_subnet.aks_subnet.id
+  public_ip_name      = local.public_ip_name
+  aks_loadbalancer_ip = var.aks_loadbalancer_ip
+  vnet_address_space  = data.azurerm_virtual_network.vnet.address_space
+  aks_subnet_name     = data.azurerm_subnet.aks_subnet.name
+  aks_cluster_name    = local.aks_cluster_name 
 }

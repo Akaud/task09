@@ -1,6 +1,6 @@
 output "azure_firewall_public_ip" {
   description = "The Public IP address of the Azure Firewall."
-  value       = azurerm_public_ip.firewall_pip.ip_address
+  value       = azurerm_public_ip.firewall_public_ip.ip_address
 }
 
 output "azure_firewall_private_ip" {
