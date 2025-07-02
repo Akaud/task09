@@ -38,14 +38,20 @@ resource "azurerm_firewall" "afw" {
 
 resource "azurerm_route_table" "rt" {
   name                = local.route_table_name
-  resource_group_name = var.resource_group_name
   location            = var.location
+  resource_group_name = var.resource_group_name
   route {
-    name                   = "default-route-to-firewall"
+    name           = "fw_to_internet"
+    address_prefix = "${azurerm_public_ip.firewall_public_ip.ip_address}/32"
+    next_hop_type  = "Internet"
+  }
+  route {
+    name                   = "internet_to_fw"
     address_prefix         = "0.0.0.0/0"
     next_hop_type          = "VirtualAppliance"
     next_hop_in_ip_address = azurerm_firewall.afw.ip_configuration[0].private_ip_address
   }
+  depends_on = [azurerm_firewall.afw]
 }
 
 resource "azurerm_subnet_route_table_association" "aks_subnet_association" {
@@ -57,14 +63,21 @@ resource "azurerm_firewall_application_rule_collection" "app_rule_collection" {
   name                = local.app_rule_collection_name
   azure_firewall_name = azurerm_firewall.afw.name
   resource_group_name = var.resource_group_name
-  priority            = 100
+  priority            = 300
   action              = "Allow"
   dynamic "rule" {
     for_each = local.application_rules
     content {
       name             = rule.value.name
-      fqdn_tags        = ["AzureKubernetesService"]
-      source_addresses = [data.azurerm_subnet.aks_subnet.address_prefixes[0]]
+      source_addresses = ["*"]
+      target_fqdns     = [format("%s", var.aks_loadbalancer_ip)]
+      dynamic "protocol" {
+        for_each = rule.value.protocols
+        content {
+          port = protocol.value.port
+          type = protocol.value.type
+        }
+      }
     }
   }
 }
@@ -79,10 +92,10 @@ resource "azurerm_firewall_network_rule_collection" "net_rule_collection" {
     for_each = local.network_rules
     content {
       name                  = rule.value.name
-      source_addresses      = rule.value.source_addresses
-      destination_addresses = rule.value.destination_addresses
-      destination_ports     = rule.value.destination_ports
-      protocols             = rule.value.protocols
+      source_addresses      = ["*"]
+      destination_addresses = ["*"]
+      destination_ports     = ["1-65535"]
+      protocols             = ["UDP", "TCP"]
     }
   }
 }
@@ -91,18 +104,19 @@ resource "azurerm_firewall_nat_rule_collection" "nat_rule_collection" {
   name                = local.nat_rule_collection_name
   azure_firewall_name = azurerm_firewall.afw.name
   resource_group_name = var.resource_group_name
-  priority            = 300
+  priority            = 100
   action              = "Dnat"
   dynamic "rule" {
     for_each = local.nat_rules
     content {
       name                  = rule.value.name
-      source_addresses      = rule.value.source_addresses
-      destination_addresses = rule.value.destination_addresses
-      destination_ports     = rule.value.destination_ports
-      translated_address    = rule.value.translated_address
-      translated_port       = rule.value.translated_port
-      protocols             = rule.value.protocols
+      source_addresses      = ["*"]
+      destination_addresses = [azurerm_public_ip.firewall_public_ip.ip_address]
+      destination_ports     = ["80"]
+      translated_address    = var.aks_loadbalancer_ip
+      translated_port       = "80"
+      protocols             = ["TCP"]
     }
   }
+  depends_on = [azurerm_firewall.afw]
 }
